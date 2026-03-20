@@ -1,0 +1,43 @@
+{
+  "_comment": "Harness Engineering configuration. See ARCHITECTURE.md § Adapting to Your Project.",
+
+  "layer_mappings": {
+    "_comment": "Map your project's actual folder names to canonical layer names.",
+    "_comment2": "Canonical names: types, config, repo, service, runtime, ui",
+    "_comment3": "Remove or add entries as needed for your project's naming conventions.",
+
+    "workers":       "runtime",
+    "consumers":     "runtime",
+    "jobs":          "runtime",
+    "subscribers":   "runtime",
+    "listeners":     "runtime",
+
+    "controllers":   "ui",
+    "routes":        "ui",
+    "api":           "ui",
+    "handlers":      "ui",
+    "views":         "ui",
+    "pages":         "ui",
+
+    "repositories":  "repo",
+    "dal":           "repo",
+    "data":          "repo",
+    "store":         "repo",
+
+    "models":        "types",
+    "schemas":       "types",
+    "entities":      "types",
+    "interfaces":    "types",
+    "dtos":          "types",
+
+    "core":          "service",
+    "domain":        "service",
+    "business":      "service",
+    "usecases":      "service",
+    "logic":         "service",
+
+    "settings":      "config",
+    "env":           "config",
+    "constants":     "config"
+  }
+}

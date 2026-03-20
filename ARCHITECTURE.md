@@ -22,7 +22,7 @@ Types → Config → Repo → Service → Runtime → UI
 | **Config**  | Environment variables, feature flags, static configuration              | Types                              |
 | **Repo**    | Data access: DB queries, external API calls, cache adapters             | Types, Config                      |
 | **Service** | Business logic: orchestration, validation, domain rules                 | Types, Config, Repo                |
-| **Runtime** | Background jobs, event processors, schedulers                           | Types, Config, Repo, Service       |
+| **Runtime** | Entry points for background work: job runners, queue consumers, cron handlers, webhook processors. Thin — delegates all logic to Service. | Types, Config, Repo, Service |
 | **UI**      | Frontend views, components, hooks, route handlers                       | Types, Config, Service (via DI)    |
 
 **Cross-cutting concerns** (auth, telemetry, feature flags, connectors) enter through a single
@@ -48,8 +48,9 @@ domains/
 │   └── ui/
 ```
 
-> **Agent instruction**: When adding a new domain, create all layers upfront even if some are
-> initially empty. This keeps the structure predictable for future agent runs.
+> **Agent instruction**: When adding a new domain, only create a `runtime/` layer if the domain
+> has a concrete background job, queue consumer, or scheduled task. Do not create it speculatively.
+> All other layers (`types/`, `config/`, `repo/`, `service/`, `ui/`) should be created upfront.
 
 ---
 
@@ -64,7 +65,94 @@ domains/
 
 ---
 
-## 4. Communication Contracts
+## 3a. The Runtime Layer — What It Is and What It Isn't
+
+**Runtime is the background-job equivalent of a route handler.** It is an *entry point*, not a logic layer.
+
+A route handler receives an HTTP request → validates input → calls Service → returns a response.
+A runtime handler receives a trigger (time, event, or queue message) → validates input → calls Service → acknowledges or errors.
+
+**What belongs in `runtime/`:**
+
+| Example | Description |
+|---------|-------------|
+| Cron job handler | `SendWeeklyDigestJob` — runs on a schedule, calls `NotificationService.sendDigest()` |
+| Queue consumer | `OrderEventConsumer` — receives an SQS/Kafka message, calls `OrderService.processEvent()` |
+| Webhook processor | `StripeWebhookHandler` — validates Stripe signature, calls `BillingService.handleWebhook()` |
+| Scheduled cleanup | `ExpiredSessionPurgeJob` — runs nightly, calls `SessionService.purgeExpired()` |
+
+**What does NOT belong in `runtime/`:**
+
+- Business logic — that lives in `service/`
+- Database queries — that lives in `repo/`
+- Retry logic for business operations — that lives in `service/` (Runtime only handles infrastructure-level retries, e.g. acknowledging a failed queue message)
+
+**The rule**: if you find yourself writing more than ~30 lines of logic in a Runtime file, that logic belongs in Service. Runtime files should read like a list of calls to Service methods.
+
+**When to create `runtime/` for a domain**: only when there is a concrete job or consumer to implement. Do not create it speculatively.
+
+## 4. Business Domains — Concrete Example
+
+Each domain has its own isolated layer stack. Below is a **concrete reference** using `billing`.
+When scaffolding any new domain, follow this exact structure and naming pattern — do not invent variations.
+
+```
+domains/
+└── billing/
+    ├── types/
+    │   ├── index.ts                       ← re-exports everything from this layer
+    │   ├── invoice.types.ts               ← InvoiceDto, InvoiceStatus enum
+    │   └── subscription.types.ts          ← SubscriptionDto, PlanTier enum
+    │
+    ├── config/
+    │   ├── index.ts
+    │   └── billing.config.ts              ← stripe keys, plan limits, trial period constants
+    │
+    ├── repo/
+    │   ├── index.ts
+    │   ├── invoice.repo.ts                ← createInvoice(), getById(), listByUser()
+    │   └── subscription.repo.ts           ← upsertSubscription(), getActiveByUser()
+    │
+    ├── service/
+    │   ├── index.ts
+    │   ├── invoice.service.ts             ← createInvoice(), voidInvoice(), retryFailed()
+    │   └── subscription.service.ts        ← activate(), cancel(), upgrade(), checkEntitlement()
+    │
+    ├── runtime/                           ← only exists because billing has real background jobs
+    │   ├── index.ts
+    │   ├── retry-failed-invoices.job.ts   ← runs nightly, calls invoice.service
+    │   └── subscription-expiry.job.ts     ← runs hourly, calls subscription.service
+    │
+    └── ui/
+        ├── index.ts
+        ├── BillingPage.tsx                ← route-level page, composes presentational components
+        ├── InvoiceList.tsx                ← presentational, receives invoices as props
+        ├── PlanSelector.tsx               ← presentational, emits onSelect callback
+        └── hooks/
+            ├── useSubscription.ts         ← calls subscription.service, owns loading/error state
+            └── useInvoices.ts             ← calls invoice.service, paginated
+```
+
+**Naming conventions to follow exactly:**
+
+| Layer     | File naming pattern       | Example                          |
+|-----------|--------------------------|----------------------------------|
+| `types`   | `<entity>.types.ts`      | `invoice.types.ts`               |
+| `config`  | `<domain>.config.ts`     | `billing.config.ts`              |
+| `repo`    | `<entity>.repo.ts`       | `invoice.repo.ts`                |
+| `service` | `<entity>.service.ts`    | `subscription.service.ts`        |
+| `runtime` | `<description>.job.ts`   | `retry-failed-invoices.job.ts`   |
+| `ui`      | `<Component>.tsx`        | `BillingPage.tsx`                |
+| `ui/hooks`| `use<Entity>.ts`         | `useInvoices.ts`                 |
+| any layer | `index.ts`               | re-exports only, no logic        |
+
+> **Agent instruction:** Create all layers except `runtime/` upfront when adding a new domain,
+> even if files are initially empty stubs (`export {}`). Only create `runtime/` when
+> a concrete job is being implemented.
+
+---
+
+## 5. Communication Contracts
 
 - **Intra-service calls**: Direct function/method calls within a domain layer stack
 - **Inter-domain calls**: Only via `Service` interfaces — never reaching into another domain's `Repo`
@@ -73,16 +161,23 @@ domains/
 
 See `DESIGN.md` for DTO isolation rules at each boundary.
 
----
 
-## 5. Dependency Rules (Mechanical Enforcement)
 
-The following rules are enforced by the linter and will fail CI if violated:
+## 5. Dependency Rules — Mechanical Enforcement
 
-1. `UI` must never import from `Repo`, `infra/`, or any external DB client
-2. `Service` must never import from `UI`
-3. `Runtime` must never import from `UI`
-4. All external data must be validated with a boundary schema (Zod, Pydantic, etc.) before entering the type system
-5. No circular imports across domain boundaries
+The following rules are enforced by `scripts/lint/check_imports.py` and will fail CI if violated.
+Run locally with: `python scripts/lint/check_imports.py --root ./src`
 
-See `docs/design-docs/core-beliefs.md` for the philosophical rationale.
+| Rule     | Check                                                                             |
+|----------|-----------------------------------------------------------------------------------|
+| ARCH-01  | Layer dependency direction: no layer imports from a later layer in the stack      |
+| ARCH-02  | `UI` must never import from `repo`, `infra/`, or any external DB client           |
+| ARCH-03  | `Service` must never import from `ui`                                             |
+| ARCH-04  | `Runtime` must never import from `ui`                                             |
+| SIZE-01  | No source file exceeds 400 lines (configurable via `--max-lines`)                 |
+
+Error messages from the linter are written to be actionable: they name the violated rule,
+the offending import, and the remediation path. Read them carefully before attempting a fix.
+
+See `docs/design-docs/core-beliefs.md` for the philosophical rationale behind these constraints.
+

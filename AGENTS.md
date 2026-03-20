@@ -6,9 +6,10 @@ Context is a scarce resource. Do not try to read every file at once.
 Use this file as your table of contents to navigate the repository's rules system before executing the user's tasks.
 
 ## Core Directives
-1. **Follow the boundaries, not the implementation:** We define strict architectural rules (`DESIGN.md`) and product scope (`PRODUCT_SENSE.md`). Within those boundaries, you have absolute autonomy to construct the best implementation possible.
-2. **Build the Harness First:** Before writing any feature or API code, always consult `QUALITY.md` and `GOLDEN_PRINCIPLES.md`. Build and wire the CI feedback loops (Tests, Linters, Type-Checkers) *first*.
+1. **Follow the boundaries, not the implementation:** We define strict architectural rules (`ARCHITECTURE.md`, `DESIGN.md`) and product scope (`PRODUCT_SENSE.md`). Within those boundaries, you have absolute autonomy to construct the best implementation possible.
+2. **Build the Harness First:** Before writing any feature or API code, always consult `QUALITY_SCORE.md` and `GOLDEN_PRINCIPLES.md`. Build and wire the CI feedback loops (Tests, Linters, Type-Checkers) *first*.
 3. **Do not hallucinate scope:** If a feature isn't explicitly in the plan, don't build it. Do not guess API shapes; use typed SDKs, generated OpenAPI specs, and structured contracts.
+4. **Close the loop:** After every change, follow the self-validation cycle in `AGENT_LOOP.md`. Do not open a PR until the loop passes.
 
 ## Knowledge Base Map
 
@@ -16,15 +17,17 @@ Instead of a single monolithic instruction file, the repository's knowledge base
 This file serves primarily as a map, with pointers to deeper sources of truth elsewhere.
 
 ### Root Context Files
-* `ARCHITECTURE.md`: Top-level map of domains and package layering.
+* `AGENT_LOOP.md`: **Read this second.** The self-validation feedback cycle every agent run must complete before opening a PR.
+* `ARCHITECTURE.md`: Top-level map of domains and package layering. Dependency rules enforced by CI.
 * `DESIGN.md`: The architectural boundaries. Defines modularity, separation of concerns, and system communication structures.
 * `FRONTEND.md`: Frontend constraints, boundaries, and best practices.
-* `PLANS.md`: Your current execution map. Ephemeral lightweight plans for small changes.
-* `PRODUCT_SENSE.md`: The "Why" and the Edge Cases. Underlying business goals and explicit functionality.
-* `QUALITY_SCORE.md`: Quality document grading each product domain and architectural layer, tracking gaps over time.
-* `RELIABILITY.md`: Platform-specific reliability requirements with custom lints and constraints.
-* `SECURITY.md`: Security requirements and invariants.
 * `GOLDEN_PRINCIPLES.md`: Mechanical rules and "taste invariants" to prevent AI framework-drift and technical debt.
+* `PLANS.md`: Your current execution map. Ephemeral lightweight plans for small changes.
+* `PRODUCT_SENSE.md`: **Read this before writing a single line.** The product scope, business logic, and explicit non-goals.
+* `QUALITY_SCORE.md`: Quality scorecard grading each domain + layer. Updated by the cleanup agent on a regular cadence.
+* `QUALITY_TESTING.md`: The testing harness philosophy — unit, integration, and structural test requirements.
+* `RELIABILITY.md`: SLO targets, observability stack requirements, and operational invariants.
+* `SECURITY.md`: Security requirements and invariants.
 
 ### Deeper Documentation (`docs/`)
 * `docs/design-docs/`: Catalogued and indexed design decisions, including a set of core beliefs (`core-beliefs.md`) that define agent-first operating principles.
