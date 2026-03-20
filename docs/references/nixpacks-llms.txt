@@ -1,0 +1,75 @@
+# nixpacks Reference (LLM Context)
+
+Nixpacks is an open-source build system that automatically detects the language and
+framework of your application and produces a Docker-compatible build without writing
+a Dockerfile.
+
+This file contains a compact reference for agent use when configuring builds and deployments.
+
+---
+
+## Basic Configuration
+
+Nixpacks is configured via a `nixpacks.toml` file in the project root.
+
+```toml
+# nixpacks.toml
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "python311"]   # Add system-level dependencies here
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "node dist/server.js"
+```
+
+---
+
+## Key Concepts
+
+- **Phases**: `setup` → `install` → `build` → `start`
+- **Auto-detection**: If no `nixpacks.toml` exists, Nixpacks infers from `package.json`, `requirements.txt`, `Pipfile`, `pyproject.toml`, etc.
+- **Environment variables**: Passed at build time via the deployment platform. Do not hardcode.
+
+---
+
+## Common Patterns
+
+### Node.js (TypeScript)
+
+```toml
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "node dist/index.js"
+```
+
+### Python (uv)
+
+```toml
+[phases.install]
+cmds = ["uv sync --frozen"]
+
+[start]
+cmd = "uv run gunicorn app:create_app() --bind 0.0.0.0:8000"
+```
+
+---
+
+## Health Check
+
+Ensure the application exposes `/healthz` for the platform's liveness probe.
+Nixpacks does not configure health checks itself — this is platform-level config.
+
+---
+
+## References
+
+- Official docs: https://nixpacks.com/docs
+- GitHub: https://github.com/railwayapp/nixpacks

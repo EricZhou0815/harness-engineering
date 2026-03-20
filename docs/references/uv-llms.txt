@@ -1,0 +1,105 @@
+# uv Reference (LLM Context)
+
+`uv` is an extremely fast Python package and project manager written in Rust.
+It replaces `pip`, `pip-tools`, `pipx`, `poetry`, `pyenv`, and `virtualenv`.
+
+This file contains a compact reference for agent use when working with Python projects.
+
+---
+
+## Core Commands
+
+```bash
+# Create a new project (generates pyproject.toml + .venv)
+uv init my-project
+
+# Add a dependency
+uv add requests
+uv add "fastapi>=0.100"
+
+# Add a dev dependency
+uv add --dev pytest ruff mypy
+
+# Remove a dependency
+uv remove requests
+
+# Sync the environment to match pyproject.toml + uv.lock
+uv sync
+
+# Sync without dev dependencies (for production)
+uv sync --no-dev
+
+# Sync with frozen lockfile (CI / reproducible installs)
+uv sync --frozen
+
+# Run a command inside the project environment
+uv run python main.py
+uv run pytest
+uv run gunicorn app:app
+
+# Upgrade a dependency
+uv lock --upgrade-package requests
+
+# Show installed packages
+uv pip list
+```
+
+---
+
+## pyproject.toml Structure
+
+```toml
+[project]
+name = "my-app"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.100",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "ruff>=0.3",
+    "mypy>=1.0",
+]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "W", "F", "I"]
+
+[tool.mypy]
+strict = true
+```
+
+---
+
+## Lock File
+
+The `uv.lock` file is the source of truth for reproducible installs. Always commit it.
+Do not manually edit `uv.lock` — it is managed by `uv lock` and `uv sync`.
+
+---
+
+## Environment Variables
+
+- `UV_PYTHON`: Pin to a specific Python version
+- `UV_CACHE_DIR`: Override cache location (useful in CI)
+
+---
+
+## CI Usage
+
+```bash
+# In CI, always use --frozen to ensure exact reproducibility
+uv sync --frozen
+uv run pytest
+```
+
+---
+
+## References
+
+- Official docs: https://docs.astral.sh/uv/
+- GitHub: https://github.com/astral-sh/uv

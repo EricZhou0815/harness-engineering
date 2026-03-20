@@ -1,6 +1,26 @@
-# QUALITY.md — Testing Harness Approach
+# QUALITY_SCORE.md — Quality Scorecard & Testing Harness
 
-We write tests to mechanically encode our boundaries and prove business resilience, never just to hit arbitrary coverage percentages. 
+This file serves two purposes:
+1. **Quality Scorecard**: Grades each product domain and architectural layer, tracking gaps over time.
+2. **Testing Harness Philosophy**: Defines the required testing approach and what "done" means.
+
+A doc-gardening agent updates quality grades on a regular cadence. Grades reflect actual observed quality, not aspirational targets.
+
+---
+
+## Domain Quality Scorecard
+
+| Domain / Layer          | Test Coverage | Type Safety | Lint Passing | Doc Freshness | Grade  | Notes                                  |
+|-------------------------|---------------|-------------|--------------|---------------|--------|----------------------------------------|
+| *(no domains yet)*      | —             | —           | —            | —             | —      | Populate as domains are created        |
+
+**Grade scale**: 🟢 Good · 🟡 Needs Attention · 🔴 Critical Gap · ⚪ Not Applicable
+
+---
+
+## Testing Harness Philosophy
+
+We write tests to mechanically encode our boundaries and prove business resilience, never just to hit arbitrary coverage percentages.
 
 ## The Harness Philosophy
 Before you implement complex feature logic, you must lay down the mechanical "harness" that will immediately catch breakages. This consists of:

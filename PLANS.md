@@ -1,4 +1,7 @@
-# PLANS.md — Execution Milestones
+# PLANS.md — Execution Milestones (Lightweight)
+
+This file is for **small, ephemeral plans** (< 1 day of agent work).
+For complex, multi-day or cross-domain work, create a dedicated plan file in `docs/exec-plans/active/`.
 
 ## Current Goal
 [Insert High-Level Goal: E.g., Build a minimal, production-quality API/Service/Frontend executing specifically requested features.]

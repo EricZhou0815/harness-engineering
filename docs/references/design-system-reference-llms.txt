@@ -1,0 +1,109 @@
+# Design System Reference (LLM Context)
+
+This file is a compact reference of the project's design tokens and component patterns,
+optimized for consumption by an AI agent. It contains only what is needed to generate
+consistent UI — not the full Storybook or component library documentation.
+
+---
+
+## Color Tokens
+
+*(Populate with your project's actual design tokens)*
+
+```
+--color-brand-primary:     [value]
+--color-brand-secondary:   [value]
+--color-surface-base:      [value]
+--color-surface-raised:    [value]
+--color-text-primary:      [value]
+--color-text-secondary:    [value]
+--color-text-disabled:     [value]
+--color-border-default:    [value]
+--color-border-subtle:     [value]
+--color-feedback-error:    [value]
+--color-feedback-success:  [value]
+--color-feedback-warning:  [value]
+--color-feedback-info:     [value]
+```
+
+---
+
+## Spacing Scale
+
+All spacing values use a base-4 scale:
+`4px, 8px, 12px, 16px, 20px, 24px, 32px, 40px, 48px, 64px, 80px, 96px`
+
+Never use arbitrary pixel values. Map to the nearest scale token.
+
+---
+
+## Typography
+
+```
+Font Family (Primary):   [e.g., Inter, Roboto, etc.]
+Font Family (Mono):      [e.g., JetBrains Mono, etc.]
+
+Heading XL:   32px / 700 / line-height 1.2
+Heading LG:   24px / 600 / line-height 1.3
+Heading MD:   20px / 600 / line-height 1.4
+Body LG:      18px / 400 / line-height 1.6
+Body MD:      16px / 400 / line-height 1.6
+Body SM:      14px / 400 / line-height 1.5
+Caption:      12px / 400 / line-height 1.4
+```
+
+---
+
+## Component Patterns
+
+### Button
+
+```
+Primary:   bg=brand-primary, text=white, hover=brand-primary-dark
+Secondary: bg=transparent, border=border-default, text=text-primary
+Danger:    bg=feedback-error, text=white
+Disabled:  opacity=0.4, cursor=not-allowed, no-hover-effects
+```
+
+Sizes: `sm` (32px height), `md` (40px height), `lg` (48px height)
+
+### Input Field
+
+```
+Default:   border=border-default, bg=surface-base
+Focus:     border=brand-primary, ring=brand-primary/20
+Error:     border=feedback-error, ring=feedback-error/20
+Disabled:  bg=surface-raised, opacity=0.6
+```
+
+### Cards
+
+```
+Surface:  bg=surface-raised, border-radius=8px, shadow=subtle-elevation
+Padding:  16px (compact) | 24px (default) | 32px (spacious)
+```
+
+---
+
+## Icon Library
+
+*(Specify the project's icon library here, e.g., Lucide, Heroicons, Phosphor)*
+
+Usage rules:
+- Icon size must match text size in the same context (e.g., 16px icon beside 14px text)
+- Icons used for actions must have an accessible label (`aria-label` or accompanying text)
+- Do not use emoji as UI icons
+
+---
+
+## Animation Tokens
+
+```
+Duration Fast:    100ms  (micro-interactions, toggles)
+Duration Default: 200ms  (panel open/close, transitions)
+Duration Slow:    400ms  (page transitions, large reveals)
+Easing:           cubic-bezier(0.4, 0, 0.2, 1)   (standard material easing)
+```
+
+Avoid animation durations over 500ms for interactive elements.
+Motion must respect the `prefers-reduced-motion` media query.
